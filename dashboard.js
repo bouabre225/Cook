@@ -6,14 +6,13 @@ const API_BASE = 'https://cook-api-duur.onrender.com/api';
 // La valeur saisie dans le champ mot de passe EST la clé ADMIN_API_KEY Laravel.
 // Elle est envoyée dans chaque requête admin via le header X-Admin-Key.
 // Aucun mot de passe séparé à maintenir : une seule clé partagée.
-let ADMIN_KEY = '';
+const DASHBOARD_PASSWORD = 'admin'; // ← change ici pour ton mot de passe
 
 // Headers envoyés sur tous les appels admin
 function adminHeaders() {
   return {
     'Accept':        'application/json',
     'Content-Type':  'application/json',
-    'X-Admin-Key':   ADMIN_KEY,
   };
 }
 
@@ -27,29 +26,16 @@ function checkPassword() {
   btn.disabled = true;
   btn.textContent = '⏳ Vérification...';
 
-  ADMIN_KEY = val;
+  // Vérification simple côté front
+  if (val === DASHBOARD_PASSWORD) {
+    document.getElementById('authScreen').style.display = 'none';
+    loadData();
+  } else {
+    showAuthError('Mot de passe incorrect.');
+  }
 
-  fetch(`${API_BASE}/stats`, { headers: adminHeaders() })
-    .then(res => {
-      if (res.ok) {
-        document.getElementById('authScreen').style.display = 'none';
-        loadData();
-      } else {
-        showAuthError(res.status === 401
-          ? 'Clé incorrecte. Réessayez.'
-          : `Erreur serveur (${res.status}).`
-        );
-        ADMIN_KEY = '';
-      }
-    })
-    .catch(() => {
-      showAuthError('Impossible de joindre l\'API. Vérifiez la connexion.');
-      ADMIN_KEY = '';
-    })
-    .finally(() => {
-      btn.disabled = false;
-      btn.textContent = 'Accéder →';
-    });
+  btn.disabled = false;
+  btn.textContent = 'Accéder →';
 }
 
 function showAuthError(msg) {
@@ -82,7 +68,6 @@ async function loadData() {
       headers: adminHeaders(),
     });
 
-    if (res.status === 401) throw new Error('Session expirée. Rechargez la page.');
     if (!res.ok) throw new Error(`HTTP ${res.status} — Vérifiez la configuration de l'API`);
 
     const json = await res.json();
