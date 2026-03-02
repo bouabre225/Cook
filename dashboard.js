@@ -1,5 +1,5 @@
 // ====== CONFIG ======
-const API_BASE = 'https://cook-api-duur.onrender.com';
+const API_BASE = 'https://cook-api-duur.onrender.com/api';
 // Dev local : const API_BASE = 'http://localhost:8000/api';
 
 // ====== CLÉ ADMIN ======
