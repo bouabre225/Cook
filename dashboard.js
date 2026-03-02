@@ -52,15 +52,6 @@ function checkPassword() {
     });
 }
 
-console.log('Clé:', ADMIN_KEY);
-// Tester manuellement l'appel
-fetch('http://localhost:8000/api/stats', {
-  headers: {
-    'Accept': 'application/json',
-    'X-Admin-Key': 'admin'  // collez votre vraie clé
-  }
-}).then(r => r.json()).then(console.log)
-
 function showAuthError(msg) {
   const el = document.getElementById('pwdError');
   el.textContent = msg;
