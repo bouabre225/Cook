@@ -1,0 +1,226 @@
+<!DOCTYPE html>
+<html lang="fr">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Dashboard – Co-Cooking Cotonou</title>
+  <!-- Pas d'indexation par les moteurs de recherche -->
+  <meta name="robots" content="noindex, nofollow">
+  <script src="https://cdn.tailwindcss.com"></script>
+  <link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@700;900&family=DM+Sans:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="styles.css">
+  <script>
+    tailwind.config = {
+      theme: {
+        extend: {
+          colors: {
+            primary: '#e85d2f',
+            secondary: '#f4a940',
+            dark: '#2a1a10',
+            card: '#2a1a10',
+            brown: '#8b4513',
+            'text-main': '#f5ede6',
+            success: '#2ecc71',
+          },
+          fontFamily: {
+            playfair: ['"Playfair Display"', 'serif'],
+            dm: ['"DM Sans"', 'sans-serif'],
+          },
+        }
+      }
+    }
+  </script>
+</head>
+<body class="bg-dark text-text-main font-dm min-h-screen">
+
+<!-- ÉCRAN DE MOT DE PASSE -->
+<div id="authScreen" class="fixed inset-0 bg-dark z-50 flex items-center justify-center px-4  text-black">
+  <div class="section-card w-full max-w-sm p-8 text-center bg-brown rounded-xl border border-white/10">
+    <div class="text-4xl mb-4">🔐</div>
+    <h2 class="font-playfair text-2xl font-bold mb-2 text-white">Accès Restreint</h2>
+    <p class="text-white/50 text-sm mb-6">Tableau de bord réservé à l'équipe Co-Cooking</p>
+    <input type="password" id="pwdInput" placeholder="Mot de passe..."
+      class="text-input w-full mb-3 text-center tracking-widest rounded-xl border border-white/10"
+      onkeydown="if(event.key==='Enter') checkPassword()">
+    <button onclick="checkPassword()"
+      class="submit-btn w-full py-3 rounded-xl bg-red-500 text-black font-semibold font-dm border border-red-500">
+      Accéder →
+    </button>
+    <p id="pwdError" class="hidden mt-3 text-red-400 text-sm">Mot de passe incorrect.</p>
+  </div>
+</div>
+
+<!-- HEADER -->
+<header class="sticky top-0 z-40 bg-dark/95 backdrop-blur border-b border-white/10 px-6 py-4">
+  <div class="max-w-7xl mx-auto flex items-center justify-between">
+    <div class="flex items-center gap-3">
+      <span class="text-2xl">🍳</span>
+      <div>
+        <div class="font-playfair font-bold text-lg">Co-Cooking — Dashboard</div>
+        <div class="text-xs text-white/40">Tableau de bord des réponses</div>
+      </div>
+    </div>
+    <div class="flex items-center gap-3">
+      <button onclick="exportCSV()"
+        class="inline-flex items-center gap-2 bg-success/15 border border-success/30 text-success rounded-lg px-4 py-2 text-sm font-medium hover:bg-success/25 transition-all">
+        📥 Exporter CSV
+      </button>
+      <button onclick="loadData()"
+        class="inline-flex items-center gap-2 bg-primary/15 border border-primary/30 text-primary rounded-lg px-4 py-2 text-sm font-medium hover:bg-primary/25 transition-all">
+        🔄 Actualiser
+      </button>
+    </div>
+  </div>
+</header>
+
+<!-- MAIN -->
+<main class="max-w-7xl mx-auto px-6 py-8">
+
+  <!-- LOADING -->
+  <div id="loadingState" class="text-center py-20 text-white/40">
+    <div class="text-4xl mb-4 animate-spin inline-block">⏳</div>
+    <p>Chargement des données...</p>
+  </div>
+
+  <!-- ERROR -->
+  <div id="errorState" class="hidden text-center py-20">
+    <div class="text-4xl mb-4">❌</div>
+    <p class="text-red-400 mb-2">Impossible de charger les données</p>
+    <p class="text-white/40 text-sm" id="errorDetail"></p>
+    <button onclick="loadData()"
+      class="mt-4 text-primary border border-primary/30 rounded-lg px-4 py-2 text-sm hover:bg-primary/10 transition-all">
+      Réessayer
+    </button>
+  </div>
+
+  <!-- CONTENT -->
+  <div id="content" class="hidden">
+
+    <!-- KPI STATS -->
+    <div class="grid grid-cols-2 md:grid-cols-4 gap-4 mb-8" id="statsGrid"></div>
+
+    <!-- CHARTS -->
+    <div class="grid grid-cols-1 md:grid-cols-2 gap-6 mb-8">
+
+      <div class="section-card">
+        <div class="section-head flex items-center gap-3 px-6 py-4 border-b border-white/10">
+          <span>🌅</span><div class="font-semibold text-sm">Intérêt Petit Déjeuner</div>
+        </div>
+        <div class="px-6 py-5" id="chartPetitDej"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head flex items-center gap-3 px-6 py-4 border-b border-white/10">
+          <span>☀️</span><div class="font-semibold text-sm">Intérêt Déjeuner</div>
+        </div>
+        <div class="px-6 py-5" id="chartDejeuner"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head flex items-center gap-3 px-6 py-4 border-b border-white/10">
+          <span>💰</span><div class="font-semibold text-sm">Budget Petit Déjeuner</div>
+        </div>
+        <div class="px-6 py-5" id="chartBudgetPetitDej"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head flex items-center gap-3 px-6 py-4 border-b border-white/10">
+          <span>💰</span><div class="font-semibold text-sm">Budget Déjeuner</div>
+        </div>
+        <div class="px-6 py-5" id="chartBudgetDejeuner"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head flex items-center gap-3 px-6 py-4 border-b border-white/10">
+          <span>👤</span><div class="font-semibold text-sm">Situations Professionnelles</div>
+        </div>
+        <div class="px-6 py-5" id="chartSituations"></div>
+      </div>
+
+      <div class="section-card">
+        <div class="section-head flex items-center gap-3 px-6 py-4 border-b border-white/10">
+          <span>🚀</span><div class="font-semibold text-sm">Modes de Service Préférés</div>
+        </div>
+        <div class="px-6 py-5" id="chartModeService"></div>
+      </div>
+
+    </div>
+
+    <!-- SEARCH & FILTERS -->
+    <div class="section-card mb-6">
+      <div class="px-6 py-4 flex flex-col md:flex-row gap-3">
+        <input type="text" id="searchInput" placeholder="🔍 Rechercher par nom, quartier..."
+          class="form-input flex-1 text-sm" oninput="filterTable()">
+        <select id="filterInteret" class="form-input text-sm md:w-64 text-white bg-dark" onchange="filterTable()">
+          <option value="">Tous les intérêts déjeuner</option>
+          <option value="Oui absolument">🔥 Oui absolument</option>
+          <option value="Oui peut-être">🤔 Oui peut-être</option>
+          <option value="Non">❌ Non</option>
+        </select>
+        <select id="filterContact" class="form-input text-sm md:w-52 text-white bg-dark" onchange="filterTable()">
+          <option value="">Tous les contacts</option>
+          <option value="Oui">✅ Veulent être contactés</option>
+        </select>
+      </div>
+    </div>
+
+    <!-- TABLE -->
+    <div class="section-card overflow-hidden mb-8">
+      <div class="section-head flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <span>📋</span>
+          <div class="font-semibold text-sm">Liste des Réponses</div>
+          <span id="tableCount" class="tag">0</span>
+        </div>
+        <div class="text-xs text-white/40">Cliquez sur une ligne pour voir le détail</div>
+      </div>
+      <div class="overflow-x-auto">
+        <table class="data-table" id="responsesTable">
+          <thead>
+            <tr>
+              <th onclick="sortTable('created_at')" class="cursor-pointer hover:text-primary">Date ↕</th>
+              <th onclick="sortTable('nom')" class="cursor-pointer hover:text-primary">Nom ↕</th>
+              <th onclick="sortTable('quartier')" class="cursor-pointer hover:text-primary">Quartier ↕</th>
+              <th>Situation</th>
+              <th>Int. Petit-Déj</th>
+              <th>Int. Déjeuner</th>
+              <th>Budget Déj.</th>
+              <th>Mode Service</th>
+              <th>WhatsApp</th>
+              <th>Contact</th>
+            </tr>
+          </thead>
+          <tbody id="responsesBody"></tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- DETAIL VIEW -->
+    <div id="detailPanel" class="hidden section-card mb-8">
+      <div class="section-head flex items-center justify-between px-6 py-4 border-b border-white/10">
+        <div class="flex items-center gap-3">
+          <span>👁️</span>
+          <div class="font-semibold text-sm">Détail de la réponse</div>
+        </div>
+        <button onclick="closeDetail()" class="text-white/40 hover:text-text-main text-xl leading-none transition-colors">✕</button>
+      </div>
+      <div id="detailContent" class="px-6 py-6 grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4"></div>
+    </div>
+
+    <!-- PAGINATION -->
+    <div class="flex items-center justify-between text-sm text-white/40" id="paginationBar">
+      <span id="paginationInfo"></span>
+      <div class="flex gap-2 flex-wrap" id="paginationBtns"></div>
+    </div>
+
+  </div>
+</main>
+
+<!-- FOOTER -->
+<div class="text-center py-6 border-t border-white/10 text-xs text-white/30 mt-8">
+  🍳 Co-Cooking Cotonou &nbsp;•&nbsp; Bénin &nbsp;•&nbsp; 2025 – 2026
+</div>
+
+<script src="dashboard.js"></script>
+</body>
+</html>
