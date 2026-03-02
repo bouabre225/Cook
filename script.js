@@ -1,5 +1,5 @@
 // ====== CONFIG ======
-const API_BASE = 'http://localhost:8000/api';
+const API_BASE = 'https://cook-api-duur.onrender.com';
 // Production : const API_BASE = 'https://your-api.onrender.com/api';
 
 // ====== NOMS DE TOUS LES GROUPES DE QUESTIONS ======
